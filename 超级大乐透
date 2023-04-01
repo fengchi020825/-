@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+
+# 读取数据
+data = pd.read_csv('dlt.csv')
+# 获取红球数据
+red_balls = data.iloc[:, :5]
+# 获取蓝球数据
+blue_balls = data.iloc[:, 5:]
+
+# 计算每个号码在每个位置上的出现频率
+red_freq = red_balls.apply(pd.value_counts).fillna(0)
+red_freq /= red_freq.sum()
+blue_freq = blue_balls.apply(pd.value_counts).fillna(0)
+blue_freq /= blue_freq.sum()
+
+# 计算每个号码在每个位置上的期望值
+red_expect = red_freq.mean(axis=1)
+blue_expect = blue_freq.mean(axis=1)
+
+# 计算和值和跨度的出现频率
+red_sum = red_balls.sum(axis=1)
+red_span = red_balls.max(axis=1) - red_balls.min(axis=1)
+red_sum_freq = red_sum.value_counts() / len(red_sum)
+red_span_freq = red_span.value_counts() / len(red_span)
+blue_sum = blue_balls.sum(axis=1)
+blue_span = blue_balls.max(axis=1) - blue_balls.min(axis=1)
+blue_sum_freq = blue_sum.value_counts() / len(blue_sum)
+blue_span_freq = blue_span.value_counts() / len(blue_span)
+
+# 预测下一期的红球号码
+red_pred = []
+for i in range(5):
+    # 计算每个号码在该位置上的得分，得分越高越有可能被选中
+    scores = red_freq.iloc[:, i] * red_expect
+    # 根据得分进行抽样，选出一个号码
+    selected = np.random.choice(scores.index, p=scores/scores.sum())
+    red_pred.append(selected)
+print("预测红球号码：", red_pred)
+
+# 预测下一期的蓝球号码
+blue_pred = []
+# 计算每个号码在该位置上的得分
+scores = blue_freq.iloc[:, 0] * blue_expect
+# 根据得分进行抽样，选出一个号码
+selected = np.random.choice(scores.index, p=scores/scores.sum())
+blue_pred.append(selected)
+print("预测蓝球号码：", blue_pred)
